@@ -3,7 +3,7 @@ Análisis genómico
 
 Bienvenidos a la clases de análisis genómico donde aprenderemos los comandos escenciales para trabajar en bash, R y Python.
 
-#horario
+# horario
 
 
 Lunes 14 a 17 horas
@@ -12,7 +12,7 @@ Miércoles 14 a 17 horas
 
 Jueves 15 a 17 horas
 
-Lugar: Biblioteca de la FES Iztacala, UNAM
+# Lugar: Biblioteca de la FES Iztacala, UNAM
 
 Objetivo
 
