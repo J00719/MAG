@@ -97,5 +97,6 @@ Material y métodos
 Resultados
 Conclusiones
 Bibliografía
+https://www.iztacala.unam.mx/<img width="320" height="98" alt="image" src="https://github.com/user-attachments/assets/0fd20d1a-de03-4174-b65c-c375b45468a8" />
 
 https://www.iztacala.unam.mx/
