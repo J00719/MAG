@@ -1,25 +1,15 @@
----
-title: "Análisis de Distribución de Especies y Huella Humana en México"
-author: "Tu Nombre"
-date: "`r Sys.Date()`"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
-
 library(rgbif)
 library(TeachingDemos)
 library(dismo)
 library(sp) 
-library(sf)  # Extra por si no funcionan algunos paquetes (como rgdal)
+library(sf)  #este es extra por si no sirven algunos paquetes (el rgdal)
 library(raster)
 library(rgeos)
 library(maptools)
 install.packages("kuenm", repos = "https://packagemanager.posit.co/cran/2023-10-13")
 install.packages("kuenm", repos = "https://cloud.r-project.org/")
 library(rgdal)
-library(terra)  # requerido por usdm
+library(terra)  #lo pide usdm
 library(usdm)
 library(ENMeval)
 library(foreign)
@@ -34,5 +24,141 @@ install.packages("remotes")
 remotes::install_github("marlonecobos/kuenm")
 library(kuenm)
 
-rm(list=ls()) # Elimina TODOS los objetos del ambiente de trabajo para evitar confusiones
+rm(list=ls()) #elimina TODOS los objetos del ambiente de trabajo para evitar confusiones en archivos
+
+################################
+##cargar capas necesarias#######
+################################
+##Mapa de ANPs
+map_ANPs <- st_read("D:/Articulo Mammals/1.analyses_final_articulos2/shapefiles/anps_megalo2.shp")#indica el directorio de las capas de ANPS en poligono de Mexico
+plot(map_ANPs)##graficar la capa de ANPs  
+
+##Mapa de areas deforestadas en el presente.
+map_deforesta <- st_read("D:/Articulo Mammals/1.analyses_final_articulos2/shapefiles/deforest_mmx3.shp")#indica el directorio de las capas de ANPS en poligono de Mexico
+plot(map_deforesta)##graficar la capa de ANPs 
+
+#############################################################
+##Mapa de las categorias de Huella Humana en Mexico##########
+map_Notransformado <- st_read("D:/Articulo Mammals/1.analyses_final_articulos2/shapefiles/huella_humana_final_Mx/no_transforme.shp")#indica el directorio de las capas de ANPS en poligono de Mexico
+plot(map_Notransformado)##graficar la capa de ANPs  
+
+map_Bajo <- st_read("D:/Articulo Mammals/1.analyses_final_articulos2/shapefiles/huella_humana_final_Mx/baja_huella.shp")#indica el directorio de las capas de ANPS en poligono de Mexico
+plot(map_Bajo)##graficar la capa de ANPs  
+
+map_medium <- st_read("D:/Articulo Mammals/1.analyses_final_articulos2/shapefiles/huella_humana_final_Mx/medium_huella.shp")#indica el directorio de las capas de ANPS en poligono de Mexico
+plot(map_medium)##graficar la capa de ANPs
+
+map_alto <- st_read("D:/Articulo Mammals/1.analyses_final_articulos2/shapefiles/huella_humana_final_Mx/high_huella.shp")#indica el directorio de las capas de ANPS en poligono de Mexico
+plot(map_alto)##graficar la capa de ANPs
+
+
+###################
+###################
+dem <- raster ("D:/Articulo Mammals/1.analyses_final_articulos2/rasters_data/dem.tif")##busca la capa de elevación general y la carga como capa RASTER para analisis posteriores.
+
+
+
+
+#######################################################
+###llamar al mapa del tiempo que se esta analizado#####
+#######################################################
+mapa_spp <- raster("D:/Articulo Mammals/1.analyses_final_articulos2/mapas_finales_bin/dispersion2040/mam_spp_144.tif")#indicar donde esta el mapa del presente
+plot(mapa_spp)##graficar el mapa que quiera ver  
+
+###############################################################
+#obtener los valores de Distribución PRESENCIA para la especie
+hist_mapa_spp <- raster::freq(mapa_spp)#le digo que me diga los valores (0,1 y NA) presentes en el mapa y las cantidades de cada uno
+km2_mapa_spp <- hist_mapa_spp[2,2]#le digo que indique cuantos valores "1" [presencia] hay en el mapa que estoy analizando
+km2_mapa_spp##el valor que sale "105020" es el numero de pixeles correspondientes a PRESENCIA... esto se debe colocar en el excell...
+
+
+#######################################################################################
+#obtener los valores de Distribución PRESENCIA para la especie en zonas deforestada####
+#######################################################################################
+CROPPED_deforsta <- raster::crop(mapa_spp, extent(map_deforesta))
+MASKED_deforestado <- mask(CROPPED_deforsta, map_deforesta)
+plot(MASKED_deforestado)
+
+#Deforestado total
+hist_deforestado <- raster::freq(MASKED_deforestado)#le digo que me diga los valores (0,1 y NA) presentes en el mapa y las cantidades de cada uno
+km2_deforestado <- hist_deforestado[2,2]#le digo que indique cuantos valores "1" [presencia] hay en el mapa que estoy analizando
+km2_deforestado##el valor que sale "61339" es el numero de pixeles en el presente... esto se debe colocar en el excell
+
+
+#########################################################
+#######ANALISIS DE HUELLA HUMANA EN LA DISTRIBUCION######
+#########################################################
+#obtener los valores de Distribución PRESENCIA para la especie en zonas nO TRANSFORMADAS
+CROPPED_Notransformado <- raster::crop(mapa_spp, extent(map_Notransformado))
+MASKED_Notransformado <- mask(CROPPED_Notransformado, map_Notransformado)
+plot(MASKED_Notransformado)
+
+#nO TRANSFORMADAS total
+hist_Notransformado <- raster::freq(MASKED_Notransformado)#le digo que me diga los valores (0,1 y NA) presentes en el mapa y las cantidades de cada uno
+km2_Notransformado <- hist_Notransformado[2,2]#le digo que indique cuantos valores "1" [presencia] hay en el mapa que estoy analizando
+km2_Notransformado##el valor que sale "21449" es el numero de pixeles en el presente... esto se debe colocar en el excell
+
+
+#obtener los valores de Distribución PRESENCIA para la especie en zonas BAJAS
+CROPPED_Bajo <- raster::crop(mapa_spp, extent(map_Bajo))
+MASKED_Bajo <- mask(CROPPED_Bajo, map_Bajo)
+plot(MASKED_Bajo)
+
+#BAJAS total
+hist_Bajo<- raster::freq(MASKED_Bajo)#le digo que me diga los valores (0,1 y NA) presentes en el mapa y las cantidades de cada uno
+km2_Bajo <- hist_Bajo[2,2]#le digo que indique cuantos valores "1" [presencia] hay en el mapa que estoy analizando
+km2_Bajo##el valor que sale "12626" es el numero de pixeles en el presente... esto se debe colocar en el excell
+
+
+#obtener los valores de Distribución PRESENCIA para la especie en zonas Medium
+CROPPED_medium<- raster::crop(mapa_spp, extent(map_medium))
+MASKED_medium <- mask(CROPPED_medium, map_medium)
+plot(MASKED_medium)
+
+#Medium total
+hist_medium<- raster::freq(MASKED_medium)#le digo que me diga los valores (0,1 y NA) presentes en el mapa y las cantidades de cada uno
+km2_medium <- hist_medium[2,2]#le digo que indique cuantos valores "1" [presencia] hay en el mapa que estoy analizando
+km2_medium##el valor que sale "14689 " es el numero de pixeles en el presente... esto se debe colocar en el excell
+
+
+#obtener los valores de Distribución PRESENCIA para la especie en zonas alto
+CROPPED_alto <- raster::crop(mapa_spp, extent(map_alto))
+MASKED_alto <- mask(CROPPED_alto, map_alto)
+plot(MASKED_alto)
+
+#alto total
+hist_alto<- raster::freq(MASKED_alto)#le digo que me diga los valores (0,1 y NA) presentes en el mapa y las cantidades de cada uno
+km2_alto <- hist_alto[2,2]#le digo que indique cuantos valores "1" [presencia] hay en el mapa que estoy analizando
+km2_alto##el valor que sale "22640" es el numero de pixeles en el presente... esto se debe colocar en el excell
+
+
+##EL valor de MUY ALTO será calculado automáticamente en el archivo excel, no hace falta calcularlo acá en R.
+
+################################################################################
+#obtener los valores de Distribución PRESENCIA para la especie en zonas ANPS####
+################################################################################
+CROPPED_ANPs <- raster::crop(mapa_spp, extent(map_ANPs))
+MASKED_ANPs <- mask(CROPPED_ANPs, map_ANPs)
+plot(MASKED_ANPs)
+
+#ANPs total
+hist_ANPs <- raster::freq(MASKED_ANPs)#le digo que me diga los valores (0,1 y NA) presentes en el mapa y las cantidades de cada uno
+km2_ANPs <- hist_ANPs[2,2]#le digo que indique cuantos valores "1" [presencia] hay en el mapa que estoy analizando
+km2_ANPs##el valor que sale "21450" es el numero de pixeles en el presente... esto se debe colocar en el excell
+
+
+#############################################
+####CALCULAR LOS INTERVALOS DE ELEVACION#####
+#############################################
+puntos_presencia <- rasterToPoints(mapa_spp, fun=NULL, spatial=TRUE)##convertir el mapa RASTER en puntos para obtener valores en cada km
+puntos_presencia2 <- subset(puntos_presencia, puntos_presencia$layer==1)#seleccionar solo los valores 1
+
+dem_species_1 <- data.frame(coordinates(puntos_presencia2),puntos_presencia2)##le pone coordenadas a cada localidad
+dem_species_2 <- data.frame(raster::extract(dem, dem_species_1[,1:2]))###me da los valores de elevación para cada punto
+elevacion <- na.omit(dem_species_2)##me da los datos ya listos para los calculos
+
+mean(elevacion$raster..extract.dem..dem_species_1...1.2..)#me da el valor promedio de la elevación, este valor va en el Excell
+sd(elevacion$raster..extract.dem..dem_species_1...1.2..)#me da el valor de desvación estandar de la elevación, este valor va en el Excell
+
+###FIN: comenzar el analisis con la siguiente especie.
 
